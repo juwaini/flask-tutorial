@@ -9,10 +9,11 @@ class TestFlaskPage(unittest.TestCase):
     def test_index_page(self):
         self.browser.get('http://localhost:5000')
         self.assertIn('Hello, world!', self.browser.page_source)
+        self.assertIn('Hi there!', self.browser.title)
 
     def test_test_page(self):
         self.browser.get('localhost:5000/test')
-        self.assertNotIn('Not Found', self.browser.page_source)
+        self.assertIn('This is a \'test\' page', self.browser.page_source)
 
     def tearDown(self):
         self.browser.quit()
