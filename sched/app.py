@@ -1,4 +1,4 @@
-from flask import abort, jsonify, redirect
+from flask import abort, jsonify, redirect 
 from flask import Flask, request, render_template, url_for
 from flask.ext.sqlalchemy import SQLAlchemy
 
@@ -15,9 +15,37 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sched.db'
 db = SQLAlchemy(app)
 db.Model = Base
 
+def dump_request_detail(request):
+    request_detail = """
+    # Before Request #
+    request.endpoint: {request.endpoint}
+    request.method: {request.method}
+    request.view_args: {request.view_args}
+    request.args: {request.args}
+    request.form: {request.form}
+    request.user_agent: {request.user_agent}
+    request.files: {request.files}
+    request.is_xhr: {request.is_xhr}
+
+    ## request.headers  ##
+    {request.headers}
+    """.format(request=request).strip()
+    return request_detail
+
+@app.before_request
+def callme_before_every_request():
+    # Demo only: the before_request hook.
+    app.logger.debug(dump_request_detail(request))
+
+@app.after_request
+def callme_after_every_response(response):
+    # Demo only: the after_request hook.
+    app.logger.debug('# After Request #\n' + repr(response))
+    return response
+
 @app.route('/')
 def hello():
-    return render_template('index.html')
+    return render_template('appointment/index.html')
 
 @app.route('/test')
 def test():
@@ -41,6 +69,20 @@ def appointment_detail(appointment_id):
         abort(404)
     return render_template('appointment/detail.html', appt=appt)
 
+@app.route('/appointments/<int:appointment_id>/edit/', methods=['GET', 'POST'])
+def appointment_edit(appointment_id):
+    """Provide HTML form to edit a given appoinment"""
+    appt = db.session.query(Appointment).get(appointment_id)
+    if appt is None:
+        abort(404)
+    form = AppointmentForm(request.form, appt)
+    if request.method == 'POST' and form.validate():
+        form.populate_obj(appt)
+        db.session.commit()
+        #Success. Send the user back to detail view
+        return redirect(url_for('appointment_detail'), appointment_id=appt.id)
+    return render_template('appointment/edit.html', form=form)
+
 @app.route('/appointments/create/', methods=['GET', 'POST'])
 def appointment_create():
     """Provide HTML form to create a new appointment"""
@@ -55,19 +97,9 @@ def appointment_create():
     #Either first load or validation error
     return render_template('appointment/edit.html', form=form)
 
-@app.route('/appointments/<int:appointment_id>/edit/', methods=['GET', 'POST'])
-def appointment_edit():
-    """Provide HTML form to edit a given appoinment"""
-    appt = db.session.query(Appointment).get(appointment_id)
-    if appt is None:
-        abort(404)
-    form = AppointmentForm(request.form, appt)
-    if request.method == 'POST' and form.validate():
-        form.populate_obj(appt)
-        db.session.commit()
-        #Success. Send the user back to detail view
-        return redirect(url_for('appointment_detail'), appointment_id=appt.id)
-    return render_template('appointment/edit.html', form=form)
+@app.route('/appointments/<int:appointment_id>/delete/', methods=['DELETE'])
+def appointment_delete():
+    raise NotImplementedError('DELETE')
 
 @app.errorhandler(404)
 def error_not_found(error):

@@ -8,8 +8,11 @@
         <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
         <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
 
-        <style>{# Add simple CSS tweaks here #}</style>
-        <script>$(function() {
+        <style>
+            {# Add simple CSS tweaks here #}
+        </style>
+        <script>
+            $(function() {
               {# Add page-load JavaScript here. #}
             });
         </script>
@@ -19,10 +22,13 @@
         <div id="main">
             <div class="utility-nav navbar navbar-fixed-top">
                 <div class="navbar-inner">
-                    <div class="content container">
-                        {% block main %}{% endblock main %}
+                    <div class="container">
+                        {# Navbar goes here #}
                     </div>
                 </div>
+            </div>
+            <div class="content container">
+                {% block main %}{% endblock main %}
             </div>
         </div>
     </body>
